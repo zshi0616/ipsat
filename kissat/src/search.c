@@ -169,16 +169,9 @@ kissat_search (kissat * solver)
     {
       save_status_to_file(solver, filename);
       solver->iteration++;
-      if (solver->iteration == 63) {
-        printf("Warning: Maximum iterations reached (63). Encoding issues\n");
-      }
       
       clause *conflict = kissat_search_propagate (solver);
 
-      if (solver->iteration % 10 == 0) {
-        printf("Iteration %d\n", solver->iteration);
-      }
-      
       if (conflict)
 	res = kissat_analyze (solver, conflict);
       else if (solver->iterating)

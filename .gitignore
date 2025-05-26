@@ -14,6 +14,8 @@ kissat/*~
 kissat_search_status.txt
 debug
 tmp
+result
+dataset
 
 *inmemory*
 *__pycache__

@@ -410,6 +410,18 @@ parse_options (application * application, int argc, char **argv)
   for (int i = 1; i < argc; i++)
     {
       const char *arg = argv[i];
+      if (!strcmp (arg, "--statuslog")) {
+        if (i == argc)
+          ERROR ("argument to '--statuslog' missing (try '-h')");
+        arg = argv[i+1];
+        if (solver->log_file)
+          ERROR ("multiple statuslog '--statuslog %s' and '--statuslog %s' (try '-h')",
+                 solver->log_file, arg);
+        solver->log_file = arg;
+        FILE *file = fopen(solver->log_file, "w");
+        fclose(file);
+        continue;
+      }
       if (single_first_option (arg))
 	ERROR ("option '%s' only allowed as %s argument",
 	       arg, i == 1 ? "single" : "first");
@@ -643,7 +655,7 @@ parse_options (application * application, int argc, char **argv)
 	    ERROR ("not writing proof to '%s' file (use '-f')", arg);
 	  if (!kissat_file_writable (arg))
 	    ERROR ("can not write proof to '%s'", arg);
-	  application->proof_path = arg;
+	  // application->proof_path = arg;
 #else
 	  ERROR ("two file arguments '%s' and '%s' without proof support "
 		 "(try '-h')", application->input_path, arg);
@@ -850,9 +862,6 @@ run_application (kissat * solver,
   if (argc == 2)
     if (parsed_one_option_and_return_zero_exit_code (argv[1]))
       return 0;
-  solver->log_file = argv[2]; 
-  FILE *file = fopen(solver->log_file, "w");
-  fclose(file);
 
   application application;
   init_app (&application, solver);
