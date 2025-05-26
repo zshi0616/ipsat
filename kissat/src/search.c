@@ -160,17 +160,24 @@ decision_limit_hit (kissat * solver)
 int
 kissat_search (kissat * solver)
 {
-  const char *filename = "/Users/zhengyuanshi/studio/ipsat/kissat_search_status.txt";
-  FILE *file = fopen(filename, "w");
-  start_search (solver);
-  fclose(file);
+  const char *filename = solver->log_file;
+  solver->iteration = 0;
 
+  start_search (solver);
   int res = solver->inconsistent ? 20 : 0;
   while (!res)
     {
       save_status_to_file(solver, filename);
+      solver->iteration++;
+      if (solver->iteration == 63) {
+        printf("Warning: Maximum iterations reached (63). Encoding issues\n");
+      }
       
       clause *conflict = kissat_search_propagate (solver);
+
+      if (solver->iteration % 10 == 0) {
+        printf("Iteration %d\n", solver->iteration);
+      }
       
       if (conflict)
 	res = kissat_analyze (solver, conflict);

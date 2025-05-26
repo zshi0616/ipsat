@@ -78,26 +78,26 @@ void save_status_to_file(kissat * solver, const char *filename)
     fprintf(stderr, "Error: Could not open file %s for writing\n", filename);
     return;
   }
-  fprintf(file, "%d ", solver->backbone_computing?1:0);
-  fprintf(file, "%d ", solver->extended?1:0);
-  fprintf(file, "%d ", solver->inconsistent?1:0);
-  fprintf(file, "%d ", solver->iterating?1:0);
-  fprintf(file, "%d ", solver->probing?1:0);
-  fprintf(file, "%d ", solver->stable?1:0);
-  fprintf(file, "%d ", solver->watching?1:0);
-  fprintf(file, "%d ", solver->large_clauses_watched_after_binary_clauses?1:0);
-  fprintf(file, "%d ", solver->vars);
-  fprintf(file, "%d ", solver->size);
-  fprintf(file, "%d ", solver->active);
+  fprintf(file, "%u ", solver->backbone_computing?1:0);
+  fprintf(file, "%u ", solver->extended?1:0);
+  fprintf(file, "%u ", solver->inconsistent?1:0);
+  fprintf(file, "%u ", solver->iterating?1:0);
+  fprintf(file, "%u ", solver->probing?1:0);
+  fprintf(file, "%u ", solver->stable?1:0);
+  fprintf(file, "%u ", solver->watching?1:0);
+  fprintf(file, "%u ", solver->large_clauses_watched_after_binary_clauses?1:0);
+  fprintf(file, "%u ", solver->vars);
+  fprintf(file, "%u ", solver->size);
+  fprintf(file, "%u ", solver->active);
 
   // imports import 
   const import *imp_p = END_STACK (solver->import);
   const import *const imp_begin = BEGIN_STACK (solver->import);
   if (imp_p != imp_begin) {
     const import imp = *--imp_p;
-    fprintf(file, "%d ", imp.lit);
-    fprintf(file, "%d ", imp.imported?1:0);
-    fprintf(file, "%d ", imp.eliminated?1:0);
+    fprintf(file, "%u ", imp.lit);
+    fprintf(file, "%u ", imp.imported?1:0);
+    fprintf(file, "%u ", imp.eliminated?1:0);
   }
   else {
     fprintf(file, "-1 -1 -1 ");
@@ -108,108 +108,108 @@ void save_status_to_file(kissat * solver, const char *filename)
   const extension *const ext_begin = BEGIN_STACK (solver->extend);
   if (ext_p != ext_begin) {
     const extension ext = *--ext_p;
-    fprintf(file, "%d ", ext.lit);
-    fprintf(file, "%d ", ext.blocking?1:0);
+    fprintf(file, "%u ", ext.lit);
+    fprintf(file, "%u ", ext.blocking?1:0);
   }
   else {
     fprintf(file, "-1 -1 ");
   }
 
   // assigned 
-  fprintf(file, "%d ", solver->assigned->level);
-  fprintf(file, "%d ", solver->assigned->trail);
-  fprintf(file, "%d ", solver->assigned->analyzed?1:0);
-  fprintf(file, "%d ", solver->assigned->binary);
-  fprintf(file, "%d ", solver->assigned->poisoned?1:0);
-  fprintf(file, "%d ", solver->assigned->redundant?1:0);
-  fprintf(file, "%d ", solver->assigned->removable?1:0);
-  fprintf(file, "%d ", solver->assigned->shrinkable?1:0);
-  fprintf(file, "%d ", solver->assigned->reason);
+  fprintf(file, "%u ", solver->assigned->level);
+  fprintf(file, "%u ", solver->assigned->trail);
+  fprintf(file, "%u ", solver->assigned->analyzed?1:0);
+  fprintf(file, "%u ", solver->assigned->binary);
+  fprintf(file, "%u ", solver->assigned->poisoned?1:0);
+  fprintf(file, "%u ", solver->assigned->redundant?1:0);
+  fprintf(file, "%u ", solver->assigned->removable?1:0);
+  fprintf(file, "%u ", solver->assigned->shrinkable?1:0);
+  fprintf(file, "%u ", solver->assigned->reason);
 
   // flags
-  fprintf(file, "%d ", solver->flags->active?1:0);
-  fprintf(file, "%d ", solver->flags->backbone0?1:0);
-  fprintf(file, "%d ", solver->flags->backbone1?1:0);
-  fprintf(file, "%d ", solver->flags->eliminate?1:0);
-  fprintf(file, "%d ", solver->flags->eliminated?1:0);
-  fprintf(file, "%d ", solver->flags->fixed?1:0);
-  fprintf(file, "%d ", solver->flags->subsume?1:0);
-  fprintf(file, "%d ", solver->flags->sweep?1:0);
+  fprintf(file, "%u ", solver->flags->active?1:0);
+  fprintf(file, "%u ", solver->flags->backbone0?1:0);
+  fprintf(file, "%u ", solver->flags->backbone1?1:0);
+  fprintf(file, "%u ", solver->flags->eliminate?1:0);
+  fprintf(file, "%u ", solver->flags->eliminated?1:0);
+  fprintf(file, "%u ", solver->flags->fixed?1:0);
+  fprintf(file, "%u ", solver->flags->subsume?1:0);
+  fprintf(file, "%u ", solver->flags->sweep?1:0);
 
   // queue 
-  fprintf(file, "%d ", solver->queue.first);
-  fprintf(file, "%d ", solver->queue.last);
-  fprintf(file, "%d ", solver->queue.stamp);
-  fprintf(file, "%d ", solver->queue.search.idx);
-  fprintf(file, "%d ", solver->queue.search.stamp);
+  fprintf(file, "%u ", solver->queue.first);
+  fprintf(file, "%u ", solver->queue.last);
+  fprintf(file, "%u ", solver->queue.stamp);
+  fprintf(file, "%u ", solver->queue.search.idx);
+  fprintf(file, "%u ", solver->queue.search.stamp);
 
   // heap 
-  fprintf(file, "%d ", solver->scores.tainted?1:0);
-  fprintf(file, "%d ", solver->scores.vars);
-  fprintf(file, "%d ", solver->scores.size);
-  fprintf(file, "%f ", *(solver->scores.score));
-  fprintf(file, "%d ", *(solver->scores.pos));
+  fprintf(file, "%u ", solver->scores.tainted?1:0);
+  fprintf(file, "%u ", solver->scores.vars);
+  fprintf(file, "%u ", solver->scores.size);
+  fprintf(file, "%lf ", *(solver->scores.score));
+  fprintf(file, "%u ", *(solver->scores.pos));
   
   fprintf(file, "%lf ", solver->scinc);
 
-  fprintf(file, "%d ", solver->level);
+  fprintf(file, "%u ", solver->level);
 
-  fprintf(file, "%d ", *(solver->propagate));
+  fprintf(file, "%u ", *(solver->propagate));
 
-  fprintf(file, "%d ", solver->best_assigned);
-  fprintf(file, "%d ", solver->target_assigned);
-  fprintf(file, "%d ", solver->unflushed);
-  fprintf(file, "%d ", solver->unassigned);
+  fprintf(file, "%u ", solver->best_assigned);
+  fprintf(file, "%u ", solver->target_assigned);
+  fprintf(file, "%u ", solver->unflushed);
+  fprintf(file, "%u ", solver->unassigned);
 
-  fprintf(file, "%d ", solver->resolvent_size);
-  fprintf(file, "%d ", solver->antecedent_size);
+  fprintf(file, "%u ", solver->resolvent_size);
+  fprintf(file, "%u ", solver->antecedent_size);
 
-  fprintf(file, "%d ", solver->clause_satisfied?1:0);
-  fprintf(file, "%d ", solver->clause_shrink?1:0);
-  fprintf(file, "%d ", solver->clause_trivial?1:0);
+  fprintf(file, "%u ", solver->clause_satisfied?1:0);
+  fprintf(file, "%u ", solver->clause_shrink?1:0);
+  fprintf(file, "%u ", solver->clause_trivial?1:0);
 
-  fprintf(file, "%d ", solver->first_reducible);
-  fprintf(file, "%d ", solver->last_irredundant);
+  fprintf(file, "%u ", solver->first_reducible);
+  fprintf(file, "%u ", solver->last_irredundant);
 
   // averages[2]
-  fprintf(file, "%d ", solver->averages[0].initialized?1:0);
-  fprintf(file, "%f ", solver->averages[0].fast_glue.value);
-  fprintf(file, "%f ", solver->averages[0].fast_glue.biased);
-  fprintf(file, "%f ", solver->averages[0].fast_glue.alpha);
-  fprintf(file, "%f ", solver->averages[0].fast_glue.beta);
-  fprintf(file, "%f ", solver->averages[0].fast_glue.exp);
-  fprintf(file, "%f ", solver->averages[0].slow_glue.value);
-  fprintf(file, "%f ", solver->averages[0].slow_glue.biased);
-  fprintf(file, "%f ", solver->averages[0].slow_glue.alpha);
-  fprintf(file, "%f ", solver->averages[0].slow_glue.beta);
-  fprintf(file, "%f ", solver->averages[0].slow_glue.exp);
-  fprintf(file, "%f ", solver->averages[0].decision_rate.value);
-  fprintf(file, "%f ", solver->averages[0].decision_rate.biased);
+  fprintf(file, "%u ", solver->averages[0].initialized?1:0);
+  fprintf(file, "%lf ", solver->averages[0].fast_glue.value);
+  fprintf(file, "%lf ", solver->averages[0].fast_glue.biased);
+  fprintf(file, "%lf ", solver->averages[0].fast_glue.alpha);
+  fprintf(file, "%lf ", solver->averages[0].fast_glue.beta);
+  fprintf(file, "%lf ", solver->averages[0].fast_glue.exp);
+  fprintf(file, "%lf ", solver->averages[0].slow_glue.value);
+  fprintf(file, "%lf ", solver->averages[0].slow_glue.biased);
+  fprintf(file, "%lf ", solver->averages[0].slow_glue.alpha);
+  fprintf(file, "%lf ", solver->averages[0].slow_glue.beta);
+  fprintf(file, "%lf ", solver->averages[0].slow_glue.exp);
+  fprintf(file, "%lf ", solver->averages[0].decision_rate.value);
+  fprintf(file, "%lf ", solver->averages[0].decision_rate.biased);
   fprintf(file, "%lf ", solver->averages[0].decision_rate.alpha);
   fprintf(file, "%lf ", solver->averages[0].decision_rate.beta);
   fprintf(file, "%lf ", solver->averages[0].decision_rate.exp);
   fprintf(file, "%llu ", solver->averages[0].saved_decisions);
-  fprintf(file, "%d ", solver->averages[1].initialized?1:0);
-  fprintf(file, "%f ", solver->averages[1].fast_glue.value);
-  fprintf(file, "%f ", solver->averages[1].fast_glue.biased);
-  fprintf(file, "%f ", solver->averages[1].fast_glue.alpha);
-  fprintf(file, "%f ", solver->averages[1].fast_glue.beta);
-  fprintf(file, "%f ", solver->averages[1].fast_glue.exp);
-  fprintf(file, "%f ", solver->averages[1].slow_glue.value);
-  fprintf(file, "%f ", solver->averages[1].slow_glue.biased);
-  fprintf(file, "%f ", solver->averages[1].slow_glue.alpha);
-  fprintf(file, "%f ", solver->averages[1].slow_glue.beta);
-  fprintf(file, "%f ", solver->averages[1].slow_glue.exp);
-  fprintf(file, "%f ", solver->averages[1].decision_rate.value);
-  fprintf(file, "%f ", solver->averages[1].decision_rate.biased);
+  fprintf(file, "%u ", solver->averages[1].initialized?1:0);
+  fprintf(file, "%lf ", solver->averages[1].fast_glue.value);
+  fprintf(file, "%lf ", solver->averages[1].fast_glue.biased);
+  fprintf(file, "%lf ", solver->averages[1].fast_glue.alpha);
+  fprintf(file, "%lf ", solver->averages[1].fast_glue.beta);
+  fprintf(file, "%lf ", solver->averages[1].fast_glue.exp);
+  fprintf(file, "%lf ", solver->averages[1].slow_glue.value);
+  fprintf(file, "%lf ", solver->averages[1].slow_glue.biased);
+  fprintf(file, "%lf ", solver->averages[1].slow_glue.alpha);
+  fprintf(file, "%lf ", solver->averages[1].slow_glue.beta);
+  fprintf(file, "%lf ", solver->averages[1].slow_glue.exp);
+  fprintf(file, "%lf ", solver->averages[1].decision_rate.value);
+  fprintf(file, "%lf ", solver->averages[1].decision_rate.biased);
   fprintf(file, "%lf ", solver->averages[1].decision_rate.alpha);
   fprintf(file, "%lf ", solver->averages[1].decision_rate.beta);
   fprintf(file, "%lf ", solver->averages[1].decision_rate.exp);
   fprintf(file, "%llu ", solver->averages[1].saved_decisions);
 
   // reluctant
-  fprintf(file, "%d ", solver->reluctant.limited?1:0);
-  fprintf(file, "%d ", solver->reluctant.trigger?1:0);
+  fprintf(file, "%u ", solver->reluctant.limited?1:0);
+  fprintf(file, "%u ", solver->reluctant.trigger?1:0);
   fprintf(file, "%llu ", (unsigned long long) solver->reluctant.period);
   fprintf(file, "%llu ", (unsigned long long) solver->reluctant.wait);
   fprintf(file, "%llu ", (unsigned long long) solver->reluctant.u);
@@ -218,35 +218,35 @@ void save_status_to_file(kissat * solver, const char *filename)
 
   // bounds
   fprintf(file, "%llu ", (unsigned long long) solver->bounds.eliminate.max_bound_completed);
-  fprintf(file, "%d ", solver->bounds.eliminate.additional_clauses);
+  fprintf(file, "%u ", solver->bounds.eliminate.additional_clauses);
 
   // delays
-  fprintf(file, "%d ", solver->delays.backbone.count);
-  fprintf(file, "%d ", solver->delays.backbone.current);
-  fprintf(file, "%d ", solver->delays.bumpreasons.count);
-  fprintf(file, "%d ", solver->delays.bumpreasons.current);
-  fprintf(file, "%d ", solver->delays.eliminate.count);
-  fprintf(file, "%d ", solver->delays.eliminate.current);
-  fprintf(file, "%d ", solver->delays.failed.count);
-  fprintf(file, "%d ", solver->delays.failed.current);
-  fprintf(file, "%d ", solver->delays.probe.count);
-  fprintf(file, "%d ", solver->delays.probe.current);
-  fprintf(file, "%d ", solver->delays.substitute.count);
-  fprintf(file, "%d ", solver->delays.substitute.current);
+  fprintf(file, "%u ", solver->delays.backbone.count);
+  fprintf(file, "%u ", solver->delays.backbone.current);
+  fprintf(file, "%u ", solver->delays.bumpreasons.count);
+  fprintf(file, "%u ", solver->delays.bumpreasons.current);
+  fprintf(file, "%u ", solver->delays.eliminate.count);
+  fprintf(file, "%u ", solver->delays.eliminate.current);
+  fprintf(file, "%u ", solver->delays.failed.count);
+  fprintf(file, "%u ", solver->delays.failed.current);
+  fprintf(file, "%u ", solver->delays.probe.count);
+  fprintf(file, "%u ", solver->delays.probe.current);
+  fprintf(file, "%u ", solver->delays.substitute.count);
+  fprintf(file, "%u ", solver->delays.substitute.current);
 
   // enabled
-  fprintf(file, "%d ", solver->enabled.eliminate?1:0);
-  fprintf(file, "%d ", solver->enabled.focus?1:0);
-  fprintf(file, "%d ", solver->enabled.mode?1:0);
-  fprintf(file, "%d ", solver->enabled.probe?1:0);
+  fprintf(file, "%u ", solver->enabled.eliminate?1:0);
+  fprintf(file, "%u ", solver->enabled.focus?1:0);
+  fprintf(file, "%u ", solver->enabled.mode?1:0);
+  fprintf(file, "%u ", solver->enabled.probe?1:0);
 
   // effort 
   fprintf(file, "%llu ", (unsigned long long) solver->last.eliminate);
   fprintf(file, "%llu ", (unsigned long long) solver->last.probe);
 
   // limited 
-  fprintf(file, "%d ", solver->limited.conflicts?1:0);
-  fprintf(file, "%d ", solver->limited.decisions?1:0);
+  fprintf(file, "%u ", solver->limited.conflicts?1:0);
+  fprintf(file, "%u ", solver->limited.decisions?1:0);
 
   // limits 
   fprintf(file, "%llu ", (unsigned long long) solver->limits.conflicts);
@@ -261,7 +261,7 @@ void save_status_to_file(kissat * solver, const char *filename)
   fprintf(file, "%llu ", (unsigned long long) solver->waiting.probe.reduce);
 
   // walked
-  fprintf(file, "%d ", solver->walked);
+  fprintf(file, "%u ", solver->walked);
 
   // statistics
   fprintf(file, "%llu ", (unsigned long long) solver->statistics.allocated_collected);
@@ -425,10 +425,12 @@ void save_status_to_file(kissat * solver, const char *filename)
   fprintf(file, "%llu ", (unsigned long long) solver->ticks);
 
   // format
-  fprintf(file, "%d ", solver->format.pos);
+  fprintf(file, "%u ", solver->format.pos);
 
   fprintf(file, "\n"); 
+  fflush(file);
   fclose(file);
+  return; 
 }
 
 void
@@ -524,9 +526,9 @@ kissat_reserve (kissat * solver, int max_var)
 {
   kissat_require_initialized (solver);
   kissat_require (0 <= max_var,
-		  "negative maximum variable argument '%d'", max_var);
+		  "negative maximum variable argument '%u'", max_var);
   kissat_require (max_var <= EXTERNAL_MAX_VAR,
-		  "invalid maximum variable argument '%d'", max_var);
+		  "invalid maximum variable argument '%u'", max_var);
   kissat_increase_size (solver, (unsigned) max_var);
 }
 
@@ -652,14 +654,14 @@ kissat_add (kissat * solver, int elit)
 	    {
 	      if (!solver->clause_satisfied)
 		{
-		  LOG ("adding root level satisfied literal %u(%d)@0=1",
+		  LOG ("adding root level satisfied literal %u(%u)@0=1",
 		       ilit, elit);
 		  solver->clause_satisfied = true;
 		}
 	    }
 	  else if (value < 0)
 	    {
-	      LOG ("adding root level falsified literal %u(%d)@0=-1",
+	      LOG ("adding root level falsified literal %u(%u)@0=-1",
 		   ilit, elit);
 	      if (!solver->clause_shrink)
 		{
@@ -680,7 +682,7 @@ kissat_add (kissat * solver, int elit)
 	  assert (mark < 0);
 	  if (!solver->clause_trivial)
 	    {
-	      LOG ("adding dual literal %u(%d) and %u(%d)",
+	      LOG ("adding dual literal %u(%u) and %u(%u)",
 		   NOT (ilit), -elit, ilit, elit);
 	      solver->clause_trivial = true;
 	    }
@@ -688,7 +690,7 @@ kissat_add (kissat * solver, int elit)
       else
 	{
 	  assert (mark > 0);
-	  LOG ("adding duplicated literal %u(%d)", ilit, elit);
+	  LOG ("adding duplicated literal %u(%u)", ilit, elit);
 	  if (!solver->clause_shrink)
 	    {
 	      solver->clause_shrink = true;

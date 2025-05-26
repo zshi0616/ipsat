@@ -850,6 +850,10 @@ run_application (kissat * solver,
   if (argc == 2)
     if (parsed_one_option_and_return_zero_exit_code (argv[1]))
       return 0;
+  solver->log_file = argv[2]; 
+  FILE *file = fopen(solver->log_file, "w");
+  fclose(file);
+
   application application;
   init_app (&application, solver);
   bool ok = parse_options (&application, argc, argv);

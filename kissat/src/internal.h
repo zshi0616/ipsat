@@ -77,6 +77,10 @@ struct kitten;
 
 struct kissat
 {
+  // log file 
+  const char *log_file;
+  unsigned iteration; 
+
 #if !defined(NDEBUG) || defined(METRICS)
   bool backbone_computing;
 #endif
