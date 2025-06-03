@@ -4,6 +4,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import gc
+import os
 
 class SimpleScaler:
     def __init__(self):
@@ -54,7 +55,6 @@ class LogCNN(nn.Module):
         
         self.relu = nn.ReLU()
         
-        # Reduced model complexity
         self.conv1 = nn.Conv1d(input_features, 32, kernel_size=3, padding=1)
         self.conv2 = nn.Conv1d(32, 64, kernel_size=3, padding=1)
         self.conv3 = nn.Conv1d(64, 128, kernel_size=3, padding=1)
@@ -70,7 +70,6 @@ class LogCNN(nn.Module):
         
         conv_output_size = self._get_conv_output_size()
         
-        # Smaller fully connected layers
         self.fc1 = nn.Linear(conv_output_size, 256)
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, predict_steps * input_features)
@@ -120,6 +119,17 @@ def load_log_data(file_path):
             data.append(row)
     return np.array(data)
 
+def load_multiple_logs(folder_path):
+    data_list = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.log'):
+            file_path = os.path.join(folder_path, filename)
+            data = load_log_data(file_path)
+            data_list.append(data)
+    if len(data_list) == 0:
+        raise ValueError(f"No log files found in {folder_path}")
+    return np.concatenate(data_list, axis=0)
+
 def preprocess_data(data):
     scaler = SimpleScaler()
     data_scaled = scaler.fit_transform(data)
@@ -157,7 +167,6 @@ def train_model(model, train_loader, val_loader, epochs=100, lr=0.001):
             optimizer.step()
             train_loss += loss.item()
             
-            # Clear memory after each batch
             del outputs, loss
             torch.cuda.empty_cache() if torch.cuda.is_available() else None
         
@@ -170,7 +179,6 @@ def train_model(model, train_loader, val_loader, epochs=100, lr=0.001):
                 loss = criterion(outputs, batch_y)
                 val_loss += loss.item()
                 
-                # Clear memory after each batch
                 del outputs, loss
                 torch.cuda.empty_cache() if torch.cuda.is_available() else None
         
@@ -192,7 +200,6 @@ def train_model(model, train_loader, val_loader, epochs=100, lr=0.001):
         print(f'Epoch {epoch}/{epochs}, Train Loss: {train_loss:.6f}, Val Loss: {val_loss:.6f}')
         print(f'Best Val Loss: {best_val_loss:.6f}, Patience: {patience_counter}/{patience}')
         
-        # Clear memory after each epoch
         gc.collect()
         torch.cuda.empty_cache() if torch.cuda.is_available() else None
         
@@ -213,76 +220,84 @@ def predict_future(model, input_sequence, scaler, device):
         prediction_original = scaler.inverse_transform(prediction_np)
         return prediction_original
 
+def naive_baseline_loss(dataset):
+    total_loss = 0
+    count = 0
+    for x, y in dataset:
+        naive_pred = x[-1].unsqueeze(0).repeat(y.shape[0], 1)
+        loss = ((naive_pred - y) ** 2).mean().item()
+        total_loss += loss
+        count += 1
+    return total_loss / count if count > 0 else float('nan')
+
 def main():
-    # Reduced parameters
-    n_history = 50  # Reduced from 100
+    n_history = 50
     predict_steps = [10, 20, 50]
-    batch_size = 16  # Reduced from 64
+    batch_size = 16
     epochs = 500
-    train_ratio = 0.8
-    learning_rate = 0.00001
-    
-    print("Loading data...")
-    data = load_log_data('a1.log')
-    print(f"Data shape: {data.shape}")
-    
-    print("Preprocessing data...")
-    data_scaled, scaler = preprocess_data(data)
-    
-    dataset = LogDataset(data_scaled, n_history=n_history, predict_steps=predict_steps)
-    print(f"Dataset size: {len(dataset)}")
-    
-    train_size = int(len(dataset) * train_ratio)
-    val_size = len(dataset) - train_size
-    
-    train_indices = list(range(train_size))
-    val_indices = list(range(train_size, len(dataset)))
-    
-    train_dataset = torch.utils.data.Subset(dataset, train_indices)
-    val_dataset = torch.utils.data.Subset(dataset, val_indices)
-    
-    print(f"Training set: first {train_size} samples (temporal order)")
-    print(f"Validation set: last {val_size} samples (temporal order)")
-    
+    learning_rate = 0.000001
+
+    print("Loading training data from ./train ...")
+    train_data = load_multiple_logs('./train')
+    print(f"Train data shape: {train_data.shape}")
+
+    print("Loading validation data from ./val ...")
+    val_data = load_multiple_logs('./val')
+    print(f"Validation data shape: {val_data.shape}")
+
+    print("Preprocessing training data ...")
+    train_data_scaled, scaler = preprocess_data(train_data)
+    print("Preprocessing validation data ...")
+    val_data_scaled = scaler.fit_transform(val_data)
+
+    train_dataset = LogDataset(train_data_scaled, n_history=n_history, predict_steps=predict_steps)
+    val_dataset = LogDataset(val_data_scaled, n_history=n_history, predict_steps=predict_steps)
+    print(f"Train dataset size: {len(train_dataset)}")
+    print(f"Validation dataset size: {len(val_dataset)}")
+
+    print("Calculating naive baseline loss on validation set ...")
+    baseline_loss = naive_baseline_loss(val_dataset)
+    print(f"Naive baseline (copy last input) MSE loss: {baseline_loss:.6f}")
+
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-    
-    input_features = data.shape[1]
+
+    input_features = train_data.shape[1]
     model = LogCNN(input_features=input_features, 
                    n_history=n_history, 
                    predict_steps=len(predict_steps))
-    
+
     total_params = sum(p.numel() for p in model.parameters())
     trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Total parameters: {total_params:,}")
     print(f"Trainable parameters: {trainable_params:,}")
     print(f"Model size: ~{total_params * 4 / 1024 / 1024:.1f} MB (fp32)")
-    
+
     print("Starting training with regularization...")
     train_losses, val_losses = train_model(model, train_loader, val_loader, 
                                          epochs=epochs, lr=learning_rate)
-    
+
     torch.save(model.state_dict(), 'log_cnn_model.pth')
     print("Model saved as log_cnn_model.pth")
-    
+
     np.save('train_losses.npy', train_losses)
     np.save('val_losses.npy', val_losses)
     print("Loss history saved as train_losses.npy and val_losses.npy")
-    
+
     print("\nMaking example prediction...")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
-    
-    last_sequence = data_scaled[-n_history:]
+
+    last_sequence = train_data_scaled[-n_history:]
     prediction = predict_future(model, last_sequence, scaler, device)
-    
+
     print("Prediction results:")
     for i, step in enumerate(predict_steps):
         print(f"T+{step} row prediction: {prediction[i]}")
-    
+
     print("\nActual last few rows (for comparison):")
-    for i in range(min(3, len(data))):
-        print(f"Last {3-i} row: {data[-(3-i)]}")
+    for i in range(min(3, len(train_data))):
+        print(f"Last {3-i} row: {train_data[-(3-i)]}")
 
 if __name__ == "__main__":
     main()
