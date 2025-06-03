@@ -19,6 +19,11 @@ class SimpleScaler:
     
     def inverse_transform(self, data):
         return data * self.std_ + self.mean_
+    
+    def transform(self, data):
+        if self.mean_ is None or self.std_ is None:
+            raise ValueError("Scaler has not been fitted yet. Call fit_transform first.")
+        return (data - self.mean_) / self.std_
 
 class LogDataset(Dataset):
     def __init__(self, data, n_history=10, predict_steps=[1, 2, 3]):
@@ -147,7 +152,7 @@ def train_model(model, train_loader, val_loader, epochs=100, lr=0.001):
     val_losses = []
     
     best_val_loss = float('inf')
-    patience = 50
+    patience = 5000
     patience_counter = 0
     best_model_state = None
     
@@ -234,8 +239,8 @@ def main():
     n_history = 50
     predict_steps = [10, 20, 50]
     batch_size = 16
-    epochs = 500
-    learning_rate = 0.000001
+    epochs = 5000
+    learning_rate = 0.0001
 
     print("Loading training data from ./train ...")
     train_data = load_multiple_logs('./train')
@@ -248,7 +253,8 @@ def main():
     print("Preprocessing training data ...")
     train_data_scaled, scaler = preprocess_data(train_data)
     print("Preprocessing validation data ...")
-    val_data_scaled = scaler.fit_transform(val_data)
+    # val_data_scaled = scaler.fit_transform(val_data)
+    val_data_scaled = scaler.transform(val_data)
 
     train_dataset = LogDataset(train_data_scaled, n_history=n_history, predict_steps=predict_steps)
     val_dataset = LogDataset(val_data_scaled, n_history=n_history, predict_steps=predict_steps)
