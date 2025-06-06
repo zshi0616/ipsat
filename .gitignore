@@ -16,6 +16,11 @@ debug
 tmp
 result
 dataset
+bak
+
+train
+test
+val
 
 *inmemory*
 *__pycache__

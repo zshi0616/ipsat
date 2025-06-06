@@ -3,31 +3,16 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
+from model_utils import *
+from model import TopModel
+from progress.bar import Bar
 
-# 超参数
+# Hyperparameters
 EMBEDDING_DIM = 128  # CNN 输出的 embedding 大小
 HIDDEN_DIM = 256  # MLP 隐藏层大小
-BATCH_SIZE = 4
+BATCH_SIZE = 16
 EPOCHS = 50
-LEARNING_RATE = 0.0001
-
-# CNN 编码器
-class CNNEncoder(nn.Module):
-    def __init__(self, input_dim, embedding_dim):
-        super(CNNEncoder, self).__init__()
-        self.conv1 = nn.Conv1d(input_dim, 64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv1d(64, 128, kernel_size=3, padding=1)
-        self.fc = nn.Linear(128, embedding_dim)
-        self.relu = nn.LeakyReLU()
-
-    def forward(self, x):
-        # 输入形状: (batch_size, seq_len, feature_dim)
-        x = x.permute(0, 2, 1)  # 转换为 (batch_size, feature_dim, seq_len)
-        x = self.relu(self.conv1(x))
-        x = self.relu(self.conv2(x))
-        x = torch.mean(x, dim=2)  # 全局平均池化
-        x = self.fc(x)  # 映射到 embedding
-        return x
+LEARNING_RATE = 1e-4
 
 # MLP Readout
 class MLPReadout(nn.Module):
@@ -46,7 +31,7 @@ class MLPReadout(nn.Module):
 class SATPredictor(nn.Module):
     def __init__(self, feature_dim, embedding_dim, pred_times):
         super(SATPredictor, self).__init__()
-        self.encoder = CNNEncoder(feature_dim, embedding_dim)
+        self.encoder = TopModel(feature_dim, embedding_dim)
         self.readouts = nn.ModuleList([MLPReadout(embedding_dim, feature_dim) for _ in range(pred_times)])
 
     def forward(self, x):
@@ -65,7 +50,8 @@ def train_model(model, train_loader, optimizer, criterion, epochs):
     """
     model.train()
     for epoch in range(epochs):
-        total_loss = 0
+        loss_status = AverageMeter()
+        bar = Bar(f"Epoch {epoch+1} / {epochs}", max=len(train_loader))
         for inputs, targets in train_loader:
             inputs, targets = inputs.float(), targets.float()
             optimizer.zero_grad()
@@ -74,19 +60,28 @@ def train_model(model, train_loader, optimizer, criterion, epochs):
             loss = sum(criterion(outputs[i], targets[:, i, :]) for i in range(len(outputs)))
             loss.backward()
             optimizer.step()
-            total_loss += loss.item()
-        print(f"Epoch {epoch+1}/{epochs}, Loss: {total_loss:.4f}")
+            loss_status.update(loss.item())
+            Bar.suffix = '[{:}/{:}]|Tot: {total:} |ETA: {eta:} '.format(
+                bar.index + 1, bar.max, total=bar.elapsed_td, eta=bar.eta_td
+            )
+            Bar.suffix += f'|Loss: {loss_status.avg:.6f}'
+            bar.next()
+        bar.finish()
+        # print(f"Epoch {epoch+1}/{epochs}, Loss: {total_loss:.6f}")
 
 if __name__ == "__main__":
     # 加载数据
     data_file = "./dataset/processed_data.npz"
     data = np.load(data_file)
-    x, y = data['x'], data['y']
+    x, y = data['x'], data['y_delta']
+    criterion = nn.MSELoss()
 
     # 转换为 PyTorch 张量
     x_tensor = torch.tensor(x)
     y_tensor = torch.tensor(y)
-
+    baseline_loss = naive_baseline_loss(x_tensor, y_tensor, criterion, zero=True)
+    print(f"baseline loss: {baseline_loss:.6f}")
+    
     # 创建数据加载器
     dataset = TensorDataset(x_tensor, y_tensor)
     train_loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=True)
@@ -96,7 +91,6 @@ if __name__ == "__main__":
     pred_times = y.shape[1]
     model = SATPredictor(feature_dim, EMBEDDING_DIM, pred_times)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    criterion = nn.MSELoss()
 
     # 训练模型
     train_model(model, train_loader, optimizer, criterion, EPOCHS)
