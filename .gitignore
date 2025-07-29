@@ -11,6 +11,21 @@ kissat/*.gcov
 kissat/gmon.out
 kissat/*~
 
+kissat_dump_gdb\build
+kissat_dump_gdb\*.o
+kissat_dump_gdb\*.a
+kissat_dump_gdb\makefile
+kissat_dump_gdb\build.h
+kissat_dump_gdb\kissat
+kissat_dump_gdb\tissat
+kissat_dump_gdb\*.gcno
+kissat_dump_gdb\*.gcda
+kissat_dump_gdb\*.gcov
+kissat_dump_gdb\gmon.out
+kissat_dump_gdb\*~
+kissat_dump_gdb\bak
+kissat_dump_gdb\snapshots
+
 kissat_search_status.txt
 debug
 tmp
